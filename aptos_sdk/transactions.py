@@ -74,7 +74,7 @@ class RawTransactionWithData(RawTransactionInternal, Protocol):
 
     def prehash(self) -> bytes:
         hasher = hashlib.sha3_256()
-        hasher.update(b"APTOS::RawTransactionWithData")
+        hasher.update(b"ENDLESS::RawTransactionWithData")
         return hasher.digest()
 
     @staticmethod
@@ -149,7 +149,7 @@ class RawTransaction(Deserializable, RawTransactionInternal, Serializable):
 
     def prehash(self) -> bytes:
         hasher = hashlib.sha3_256()
-        hasher.update(b"APTOS::RawTransaction")
+        hasher.update(b"ENDLESS::RawTransaction")
         return hasher.digest()
 
     @staticmethod

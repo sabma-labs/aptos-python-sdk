@@ -127,9 +127,9 @@ class RestClient:
         :return: The Aptos coin balance associated with the account
         """
         result = await self.view_bcs_payload(
-            "0x1::coin",
+            "0x1::endless_coin",
             "balance",
-            [TypeTag(StructTag.from_str("0x1::aptos_coin::AptosCoin"))],
+            [],
             [TransactionArgument(account_address, Serializer.struct)],
             ledger_version,
         )
@@ -473,7 +473,7 @@ class RestClient:
         signed_transaction: SignedTransaction,
         estimate_gas_usage: bool = False,
     ) -> Dict[str, Any]:
-        headers = {"Content-Type": "application/x.aptos.signed_transaction+bcs"}
+        headers = {"Content-Type": "application/x.endless.signed_transaction+bcs"}
         params = {}
         if estimate_gas_usage:
             params = {
@@ -508,7 +508,10 @@ class RestClient:
     async def submit_bcs_transaction(
         self, signed_transaction: SignedTransaction
     ) -> str:
-        headers = {"Content-Type": "application/x.aptos.signed_transaction+bcs"}
+        headers = {
+            # "Accept":" application/json, application/x-bcs",
+            "Content-Type": "application/x.endless.signed_transaction+bcs"
+        }
         response = await self.client.post(
             f"{self.base_url}/transactions",
             headers=headers,
@@ -860,7 +863,7 @@ class RestClient:
         view_data = EntryFunction.natural(module, function, ty_args, args)
         ser = Serializer()
         view_data.serialize(ser)
-        headers = {"Content-Type": "application/x.aptos.view_function+bcs"}
+        headers = {"Content-Type": "application/x.endless.view_function+bcs"}
         response = await self.client.post(
             request, headers=headers, content=ser.output()
         )
