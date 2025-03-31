@@ -7,31 +7,32 @@ from aptos_sdk.account import Account
 from aptos_sdk.async_client import FaucetClient, IndexerClient, RestClient
 
 from .common import FAUCET_AUTH_TOKEN, FAUCET_URL, INDEXER_URL, NODE_URL
-
+import pdb
 
 async def main():
     # :!:>section_1
-    rest_client = RestClient(NODE_URL)
-    faucet_client = FaucetClient(
-        FAUCET_URL, rest_client, FAUCET_AUTH_TOKEN
-    )  # <:!:section_1
+    rest_client = RestClient("https://rpc-test.endless.link/v1")
+    # faucet_client = FaucetClient(
+    #     FAUCET_URL, rest_client, FAUCET_AUTH_TOKEN
+    # )  # <:!:section_1
     if INDEXER_URL and INDEXER_URL != "none":
         indexer_client = IndexerClient(INDEXER_URL)
     else:
         indexer_client = None
 
     # :!:>section_2
-    alice = Account.generate()
+    # alice = Account.generate()
     bob = Account.generate()  # <:!:section_2
-
+    alice =  Account.load_key("0x48ca3b85eaf1b2d6658d662a34a572f6eada8076f14e93d36e6291edff564086")
+    # bob =  Account.load_key("0x7bdbb1a41263b886e8d1fe5f5299874310946e9ef4a2a9317c2c632bcb5641d9")
     print("\n=== Addresses ===")
     print(f"Alice: {alice.address()}")
     print(f"Bob: {bob.address()}")
 
     # :!:>section_3
-    alice_fund = faucet_client.fund_account(alice.address(), 100_000_000)
-    bob_fund = faucet_client.fund_account(bob.address(), 0)  # <:!:section_3
-    await asyncio.gather(*[alice_fund, bob_fund])
+    # alice_fund = faucet_client.fund_account(alice.address(), 100_000_000)
+    # bob_fund = faucet_client.fund_account(bob.address(), 0)  # <:!:section_3
+    # await asyncio.gather(*[alice_fund, bob_fund])
 
     print("\n=== Initial Balances ===")
     # :!:>section_4
@@ -89,10 +90,14 @@ async def main():
 
         variables = {"account": f"{bob.address()}"}
         data = await indexer_client.query(query, variables)
+        pdb.set_trace()
         assert len(data["data"]["account_transactions"]) > 0
 
     await rest_client.close()
 
 
 if __name__ == "__main__":
+    import sys
+    if sys.platform == "win32":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     asyncio.run(main())

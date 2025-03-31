@@ -5,11 +5,11 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
-
+from typing import Any, Dict, List, Optional, Union
+import pdb
 import httpx
 import python_graphql_client
-
+import pdb
 from .account import Account
 from .account_address import AccountAddress
 from .authenticator import Authenticator, MultiAgentAuthenticator
@@ -26,7 +26,7 @@ from .transactions import (
 from .type_tag import StructTag, TypeTag
 
 U64_MAX = 18446744073709551615
-
+from aptos_sdk.bcs import encoder 
 
 @dataclass
 class ClientConfig:
@@ -127,9 +127,9 @@ class RestClient:
         :return: The Aptos coin balance associated with the account
         """
         result = await self.view_bcs_payload(
-            "0x1::coin",
+            "0x1::endless_coin",
             "balance",
-            [TypeTag(StructTag.from_str("0x1::aptos_coin::AptosCoin"))],
+            [],
             [TransactionArgument(account_address, Serializer.struct)],
             ledger_version,
         )
@@ -473,7 +473,7 @@ class RestClient:
         signed_transaction: SignedTransaction,
         estimate_gas_usage: bool = False,
     ) -> Dict[str, Any]:
-        headers = {"Content-Type": "application/x.aptos.signed_transaction+bcs"}
+        headers = {"Content-Type": "application/x.endless.signed_transaction+bcs"}
         params = {}
         if estimate_gas_usage:
             params = {
@@ -508,7 +508,7 @@ class RestClient:
     async def submit_bcs_transaction(
         self, signed_transaction: SignedTransaction
     ) -> str:
-        headers = {"Content-Type": "application/x.aptos.signed_transaction+bcs"}
+        headers = {"Content-Type": "application/x.endless.signed_transaction+bcs"}
         response = await self.client.post(
             f"{self.base_url}/transactions",
             headers=headers,
@@ -680,10 +680,11 @@ class RestClient:
 
     async def create_bcs_transaction(
         self,
-        sender: Account | AccountAddress,
+        sender: Union[Account, AccountAddress],
         payload: TransactionPayload,
         sequence_number: Optional[int] = None,
     ) -> RawTransaction:
+        # pdb.set_trace()
         if isinstance(sender, Account):
             sender_address = sender.address()
         else:
@@ -713,7 +714,11 @@ class RestClient:
         raw_transaction = await self.create_bcs_transaction(
             sender, payload, sequence_number
         )
+        
         authenticator = sender.sign_transaction(raw_transaction)
+        # print(f"Signing payload: {raw_transaction}")
+        # print(f"Using key: {sender.private_key.hex()}")
+        # print(f"Resulting sig: {authenticator}")
         return SignedTransaction(raw_transaction, authenticator)
 
     #
@@ -730,11 +735,11 @@ class RestClient:
     ) -> str:
         transaction_arguments = [
             TransactionArgument(recipient, Serializer.struct),
-            TransactionArgument(amount, Serializer.u64),
+            TransactionArgument(amount, Serializer.u128),
         ]
-
+        # pdb.set_trace()
         payload = EntryFunction.natural(
-            "0x1::aptos_account",
+            "0x1::endless_account",
             "transfer",
             [],
             transaction_arguments,
@@ -743,6 +748,11 @@ class RestClient:
         signed_transaction = await self.create_bcs_signed_transaction(
             sender, TransactionPayload(payload), sequence_number=sequence_number
         )
+        # serialized = encoder(signed_transaction)
+        # print(f"Serialized BCS: {serialized.hex()}")
+
+        
+        
         return await self.submit_bcs_transaction(signed_transaction)  # <:!:bcs_transfer
 
     async def transfer_coins(
@@ -759,7 +769,7 @@ class RestClient:
         ]
 
         payload = EntryFunction.natural(
-            "0x1::aptos_account",
+            "0x1::endless_account",
             "transfer_coins",
             [TypeTag(StructTag.from_str(coin_type))],
             transaction_arguments,
@@ -860,7 +870,7 @@ class RestClient:
         view_data = EntryFunction.natural(module, function, ty_args, args)
         ser = Serializer()
         view_data.serialize(ser)
-        headers = {"Content-Type": "application/x.aptos.view_function+bcs"}
+        headers = {"Content-Type": "application/x.endless.view_function+bcs"}
         response = await self.client.post(
             request, headers=headers, content=ser.output()
         )

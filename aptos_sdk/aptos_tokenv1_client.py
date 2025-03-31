@@ -2,14 +2,14 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from typing import Any
-
+import pdb
 from .account import Account
 from .account_address import AccountAddress
 from .async_client import ApiError, RestClient
 from .bcs import Serializer
 from .transactions import EntryFunction, TransactionArgument, TransactionPayload
 
-U64_MAX = 18446744073709551615
+U64_MAX = 100
 
 
 class AptosTokenV1Client:
@@ -20,33 +20,92 @@ class AptosTokenV1Client:
     def __init__(self, client: RestClient):
         self._client = client
 
-    async def create_collection(
-        self, account: Account, name: str, description: str, uri: str
+    # async def create_collection(
+    #     self, account: Account, name: str, description: str, uri: str
+    # ) -> str:
+    #     """Creates a new collection within the specified account"""
+
+    #     transaction_arguments = [
+    #         TransactionArgument(name, Serializer.str),
+    #         TransactionArgument(description, Serializer.str),
+    #         TransactionArgument(uri, Serializer.str),
+    #         TransactionArgument(U64_MAX, Serializer.u64),
+    #         TransactionArgument(
+    #             [False, False, False], Serializer.sequence_serializer(Serializer.bool)
+    #         ),
+    #     ]
+
+    #     payload = EntryFunction.natural(
+    #         "0x4::nft",
+    #         "create_collection",
+    #         [],
+    #         transaction_arguments,
+    #     )
+
+    #     signed_transaction = await self._client.create_bcs_signed_transaction(
+    #         account, TransactionPayload(payload)
+    #     )
+    #     return await self._client.submit_bcs_transaction(signed_transaction)
+
+    async def  create_collection(
+    self,
+    account: Account,
+    description: str,
+    name: str,
+    uri: str,
+    mutable_description: bool = True,
+    mutable_royalty: bool = True,
+    mutable_uri: bool = True,
+    mutable_token_description: bool = True,
+    mutable_token_name: bool = True,
+    mutable_token_properties: bool = True,
+    mutable_token_uri: bool = True,
+    tokens_burnable_by_creator: bool = False,
+    tokens_freezable_by_creator: bool = False,
+    royalty_numerator: int = 0,
+    royalty_denominator: int = 1,
     ) -> str:
-        """Creates a new collection within the specified account"""
+        """
+        Creates a new collection on-chain.
+        The Move function signature (excluding the signer) is:
+        (description: string, max_supply: u64, name: string, uri: string,
+        mutable_description: bool, mutable_royalty: bool, mutable_uri: bool,
+        mutable_token_description: bool, mutable_token_name: bool,
+        mutable_token_properties: bool, mutable_token_uri: bool,
+        tokens_burnable_by_creator: bool, tokens_freezable_by_creator: bool,
+        royalty_numerator: u64, royalty_denominator: u64)
+        """
 
         transaction_arguments = [
-            TransactionArgument(name, Serializer.str),
+            
             TransactionArgument(description, Serializer.str),
-            TransactionArgument(uri, Serializer.str),
             TransactionArgument(U64_MAX, Serializer.u64),
-            TransactionArgument(
-                [False, False, False], Serializer.sequence_serializer(Serializer.bool)
-            ),
+            TransactionArgument(name, Serializer.str),
+            TransactionArgument(uri, Serializer.str),
+            TransactionArgument(mutable_description, Serializer.bool),
+            TransactionArgument(mutable_royalty, Serializer.bool),
+            TransactionArgument(mutable_uri, Serializer.bool),
+            TransactionArgument(mutable_token_description, Serializer.bool),
+            TransactionArgument(mutable_token_name, Serializer.bool),
+            TransactionArgument(mutable_token_properties, Serializer.bool),
+            TransactionArgument(mutable_token_uri, Serializer.bool),
+            TransactionArgument(tokens_burnable_by_creator, Serializer.bool),
+            TransactionArgument(tokens_freezable_by_creator, Serializer.bool),
+            TransactionArgument(royalty_numerator, Serializer.u64),
+            TransactionArgument(royalty_denominator, Serializer.u64),
         ]
-
+        # pdb.set_trace()
         payload = EntryFunction.natural(
-            "0x3::token",
-            "create_collection_script",
-            [],
-            transaction_arguments,
+            "0x4::nft", "create_collection", [], transaction_arguments
         )
 
         signed_transaction = await self._client.create_bcs_signed_transaction(
             account, TransactionPayload(payload)
         )
+        
         return await self._client.submit_bcs_transaction(signed_transaction)
 
+    
     async def create_token(
         self,
         account: Account,
@@ -57,31 +116,25 @@ class AptosTokenV1Client:
         uri: str,
         royalty_points_per_million: int,
     ) -> str:
+        
+        royalty = {
+            "numerator" : royalty_points_per_million,
+            "denominator": 1000000,
+            "payee_address": account.address()
+        }
         transaction_arguments = [
             TransactionArgument(collection_name, Serializer.str),
-            TransactionArgument(name, Serializer.str),
             TransactionArgument(description, Serializer.str),
+            TransactionArgument(name, Serializer.str),
             TransactionArgument(supply, Serializer.u64),
             TransactionArgument(supply, Serializer.u64),
             TransactionArgument(uri, Serializer.str),
-            TransactionArgument(account.address(), Serializer.struct),
-            # SDK assumes per million
-            TransactionArgument(1000000, Serializer.u64),
-            TransactionArgument(royalty_points_per_million, Serializer.u64),
-            TransactionArgument(
-                [False, False, False, False, False],
-                Serializer.sequence_serializer(Serializer.bool),
-            ),
-            TransactionArgument([], Serializer.sequence_serializer(Serializer.str)),
-            TransactionArgument(
-                [], Serializer.sequence_serializer(Serializer.to_bytes)
-            ),
-            TransactionArgument([], Serializer.sequence_serializer(Serializer.str)),
+            TransactionArgument(royalty, Serializer.struct),
         ]
 
         payload = EntryFunction.natural(
-            "0x3::token",
-            "create_token_script",
+            "0x4::token",
+            "create_named_token",
             [],
             transaction_arguments,
         )

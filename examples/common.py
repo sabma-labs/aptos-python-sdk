@@ -10,13 +10,13 @@ APTOS_CORE_PATH = os.getenv(
 )
 # :!:>section_1
 FAUCET_URL = os.getenv(
-    "APTOS_FAUCET_URL",
-    "https://faucet.devnet.aptoslabs.com",
+    "ENDLESS_FAUCET_URL",
+    "http://bridge.endless.link/faucet",
 )
-FAUCET_AUTH_TOKEN = os.getenv("FAUCET_AUTH_TOKEN")
+FAUCET_AUTH_TOKEN = os.getenv("FAUCET_AUTH_TOKEN", "AHpEpNrqVvZyFzV6fMfSb3RvLznZnfnK7MpksAnAgUfE")
 INDEXER_URL = os.getenv(
-    "APTOS_INDEXER_URL",
-    "https://api.devnet.aptoslabs.com/v1/graphql",
+    "ENDLESS_INDEXER_URL",
+    "https://idx-test.endless.link/v1/graphql",
 )
-NODE_URL = os.getenv("APTOS_NODE_URL", "https://api.devnet.aptoslabs.com/v1")
+NODE_URL = os.getenv("ENDLESS_NODE_URL", "https://rpc-test.endless.link/v1")
 # <:!:section_1
