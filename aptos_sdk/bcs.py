@@ -190,7 +190,9 @@ class Serializer:
         value_encoder: typing.Callable[[Serializer, typing.Any], None],
     ):
         return lambda self, values: self.sequence(values, value_encoder)
-
+    
+    
+    
     def sequence(
         self,
         values: typing.List[typing.Any],
