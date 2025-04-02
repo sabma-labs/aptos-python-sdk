@@ -176,7 +176,7 @@ class RawTransaction(Deserializable, RawTransactionInternal, Serializable):
 
 class MultiAgentRawTransaction(RawTransactionWithData):
     secondary_signers: List[AccountAddress]
-
+ 
     def __init__(
         self, raw_transaction: RawTransaction, secondary_signers: List[AccountAddress]
     ):
