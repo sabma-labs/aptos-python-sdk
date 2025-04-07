@@ -8,6 +8,7 @@ from .account_address import AccountAddress
 from .async_client import ApiError, RestClient
 from .bcs import Serializer
 from .transactions import EntryFunction, TransactionArgument, TransactionPayload
+from .type_tag import TypeTag, StructTag
 
 U64_MAX = 18446744073709551615
 
@@ -40,7 +41,7 @@ class AptosTokenV1Client:
             TransactionArgument(True, Serializer.bool),
             TransactionArgument(True, Serializer.bool),
             TransactionArgument(0, Serializer.u64),
-            TransactionArgument(100, Serializer.u64),
+            TransactionArgument(990, Serializer.u64),
         ]
 
         # creator: & signer,
@@ -139,20 +140,23 @@ class AptosTokenV1Client:
         token_name: str,
         property_version: int,
         amount: int,
+        token_address: AccountAddress,
     ) -> str:
         transaction_arguments = [
+            # TransactionArgument(creator, Serializer.struct),
+            TransactionArgument(token_address, Serializer.struct),
             TransactionArgument(receiver, Serializer.struct),
-            TransactionArgument(creator, Serializer.struct),
-            TransactionArgument(collection_name, Serializer.str),
-            TransactionArgument(token_name, Serializer.str),
-            TransactionArgument(property_version, Serializer.u64),
-            TransactionArgument(amount, Serializer.u64),
+            # TransactionArgument(creator, Serializer.struct),
+            # TransactionArgument(collection_name, Serializer.str),
+            # TransactionArgument(token_name, Serializer.str),
+            # TransactionArgument(property_version, Serializer.u64),
+            # TransactionArgument(amount, Serializer.u64),
         ]
 
         payload = EntryFunction.natural(
-            "0x3::token_transfers",
-            "offer_script",
-            [],
+            "0x1::object",
+            "transfer",
+            [TypeTag(StructTag.from_str("0x4::token::Token"))],
             transaction_arguments,
         )
         signed_transaction = await self._client.create_bcs_signed_transaction(
@@ -232,32 +236,35 @@ class AptosTokenV1Client:
         token_name: str,
         property_version: int,
     ) -> Any:
-        resource = await self._client.account_resource(owner, "0x3::token::TokenStore")
-        token_store_handle = resource["data"]["tokens"]["handle"]
+        resource = await self._client.account_resource(owner, "0x4::collection::ConcurrentSupply")
+        # resource = await self._client.account_resource(owner, "0x4::token::Token")
+        return resource["data"]
 
-        token_id = {
-            "token_data_id": {
-                "creator": str(creator),
-                "collection": collection_name,
-                "name": token_name,
-            },
-            "property_version": str(property_version),
-        }
+        # token_store_handle = resource["data"]["tokens"]["handle"]
 
-        try:
-            return await self._client.get_table_item(
-                token_store_handle,
-                "0x3::token::TokenId",
-                "0x3::token::Token",
-                token_id,
-            )
-        except ApiError as e:
-            if e.status_code == 404:
-                return {
-                    "id": token_id,
-                    "amount": "0",
-                }
-            raise
+        # token_id = {
+        #     "token_data_id": {
+        #         "creator": str(creator),
+        #         "collection": collection_name,
+        #         "name": token_name,
+        #     },
+        #     "property_version": str(property_version),
+        # }
+        #
+        # try:
+        #     return await self._client.get_table_item(
+        #         token_store_handle,
+        #         "0x3::token::TokenId",
+        #         "0x3::token::Token",
+        #         token_id,
+        #     )
+        # except ApiError as e:
+        #     if e.status_code == 404:
+        #         return {
+        #             "id": token_id,
+        #             "amount": "0",
+        #         }
+        #     raise
 
     async def get_token_balance(
         self,
@@ -270,7 +277,8 @@ class AptosTokenV1Client:
         info = await self.get_token(
             owner, creator, collection_name, token_name, property_version
         )
-        return info["amount"]
+        return info
+        # return info["amount"]
 
     async def get_token_data(
         self,
@@ -280,37 +288,41 @@ class AptosTokenV1Client:
         property_version: int,
     ) -> Any:
         resource = await self._client.account_resource(
-            creator, "0x3::token::Collections"
+            creator, "0x4::token::Token"
         )
-        token_data_handle = resource["data"]["token_data"]["handle"]
+        return resource["data"]
 
-        token_data_id = {
-            "creator": str(creator),
-            "collection": collection_name,
-            "name": token_name,
-        }
-
-        return await self._client.get_table_item(
-            token_data_handle,
-            "0x3::token::TokenDataId",
-            "0x3::token::TokenData",
-            token_data_id,
-        )  # <:!:read_token_data_table
+        # token_data_handle = resource["data"]["token_data"]["handle"]
+        #
+        # token_data_id = {
+        #     "creator": str(creator),
+        #     "collection": collection_name,
+        #     "name": token_name,
+        # }
+        #
+        # return await self._client.get_table_item(
+        #     token_data_handle,
+        #     "0x3::token::TokenDataId",
+        #     "0x3::token::TokenData",
+        #     token_data_id,
+        # )  # <:!:read_token_data_table
 
     async def get_collection(
         self, creator: AccountAddress, collection_name: str
     ) -> Any:
         resource = await self._client.account_resource(
-            creator, "0x3::token::Collections"
+            creator, "0x4::collection::Collection"
         )
-        token_data = resource["data"]["collection_data"]["handle"]
+        return resource["data"]
 
-        return await self._client.get_table_item(
-            token_data,
-            "0x1::string::String",
-            "0x3::token::CollectionData",
-            collection_name,
-        )
+        # token_data = resource["data"]["collection_data"]["handle"]
+        #
+        # return await self._client.get_table_item(
+        #     token_data,
+        #     "0x1::string::String",
+        #     "0x3::token::CollectionData",
+        #     collection_name,
+        # )
 
     async def transfer_object(
         self, owner: Account, object: AccountAddress, to: AccountAddress
