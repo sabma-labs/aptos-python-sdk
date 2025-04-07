@@ -191,8 +191,13 @@ class Serializer:
     ):
         return lambda self, values: self.sequence(values, value_encoder)
     
-    
-    
+    def serialize_option(serializer: Serializer, value: typing.Optional[typing.Any]):
+        if value is None:
+            serializer.u8(0)  # 0 indicates None
+        else:
+            serializer.u8(1)  # 1 indicates Some
+            serializer.struct(value)
+        
     def sequence(
         self,
         values: typing.List[typing.Any],

@@ -64,8 +64,8 @@ async def main():
         "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Cat_November_2010-1a.jpg/800px-Cat_November_2010-1a.jpg",
         0,
     )  # <:!:section_5
-    
-    await rest_client.wait_for_transaction(txn_hash)
+    pdb.set_trace()
+    tx_response = await rest_client.wait_for_transaction(txn_hash)
 
     # :!:>section_6
     collection_data = await token_client.get_collection(

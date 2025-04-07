@@ -8,73 +8,130 @@ from .account_address import AccountAddress
 from .async_client import ApiError, RestClient
 from .bcs import Serializer
 from .transactions import EntryFunction, TransactionArgument, TransactionPayload
-
 U64_MAX = 100
 from aptos_sdk.bcs import Serializable, Serializer
 from typing import Optional, List, TypeVar, Generic
-
+from .aptos_token_client import Royalty 
 T = TypeVar('T', bound='Serializable')
 
-class MoveVector(Generic[T]):
-    """
-    A simple container that wraps a list of values and serializes them.
-    """
-    def __init__(self, values: List[T]) -> None:
-        self.values = values
+class Royalty:
+    numerator: int
+    denominator: int
+    payee_address: AccountAddress
 
-    def serialize(self, serializer: "Serializer") -> None:
-        # Serialize the number of values using uleb128 encoding.
-        serializer.uleb128(len(self.values))
-        # Serialize each value.
-        for value in self.values:
-            value.serialize(serializer)
-class MoveOption(Serializable, Generic[T] ):
-    """
-    A Python implementation of MoveOption that serializes an optional value as:
-    - 0x00 if the value is None,
-    - 0x01 followed by the serialized value if present.
-    """
-    def __init__(self, value: Optional[T] = None) -> None:
-        self.value = value
+    struct_tag: str = "0x4::royalty::Royalty"
 
-    def serialize_for_entry_function(self, serializer: "Serializer") -> None:
-        bcs_bytes = self.bcs_to_bytes()
-        serializer.to_bytes(bcs_bytes)
-
-    def unwrap(self) -> T:
-        if self.value is None:
-            raise Exception("Called unwrap on a MoveOption with no value")
-        return self.value
-
-    def is_some(self) -> bool:
-        return self.value is not None
-
-    def serialize(self, serializer: "Serializer") -> None:
-        if self.value is None:
-            serializer.u8(0)  # Tag for None
-        else:
-            serializer.u8(1)  # Tag for Some
-            self.value.serialize(serializer)
-    
-    def bcs_to_bytes(self) -> bytes:
-        """
-        Serializes this object into bytes using the provided serializer.
-        """
-        serializer = Serializer()
-        self.serialize(serializer)
-        return serializer.output()        
-             
-class Royalty(Serializable):
-    def __init__(self, numerator: int, denominator: int, payee_address: AccountAddress):
+    def __init__(self, numerator, denominator, payee_address):
         self.numerator = numerator
         self.denominator = denominator
         self.payee_address = payee_address
 
+    def __str__(self) -> str:
+        return f"Royalty[numerator: {self.numerator}, denominator: {self.denominator}, payee_address: {self.payee_address}]"
+
+    @staticmethod
+    def parse(resource: dict[str, Any]):
+        payee = resource["payee_address"]
+        if isinstance(payee, AccountAddress):
+            address = payee
+        else:
+            address = AccountAddress.from_str_relaxed(payee)
+        return Royalty(
+            resource["numerator"],
+            resource["denominator"],
+            address,
+        )     
     def serialize(self, serializer: Serializer) -> None:
         print("Serializing Royalty")
         serializer.u64(self.numerator)
         serializer.u64(self.denominator)
-        serializer.struct(self.payee_address) 
+        serializer.struct(self.payee_address)
+
+
+class Option:
+    """
+    A Python implementation of a Move Option type that serializes an optional value as:
+      - 0x00 if the value is None,
+      - 0x01 followed by the serialized value if present.
+    """
+
+    struct_tag: str = "0x1::option::Option"
+
+    def __init__(self, value) -> None:
+        self.value = value
+
+    def __str__(self) -> str:
+        if self.value is None:
+            return "Option[None]"
+        else:
+            return f"Option[Some: {self.value}]"
+
+    @staticmethod
+    def parse(resource: dict[str, Any], inner_parser) -> "Option":
+        """
+        Parse an Option from a resource dictionary.
+        
+        Args:
+            resource (dict[str, Any]): A dictionary representing the serialized option.
+            inner_parser (Callable[[Any], T]): A function that can parse the inner value.
+            
+        Returns:
+            Option[T]: The parsed Option instance.
+            
+        Note:
+            The resource dictionary is expected to have a key "tag" indicating 0 (None) or 1 (Some),
+            and if Some, a key "value" containing the serialized inner value.
+        """
+        tag = resource.get("tag")
+        if tag == 0:
+            return Option(None)
+        elif tag == 1:
+            inner_value = inner_parser(resource.get("value"))
+            return Option(inner_value)
+        else:
+            raise Exception("Invalid tag for Option")
+
+    def serialize(self, serializer: "Serializer") -> None:
+        if self.value is None:
+            serializer.u8(0)  # Write 0x00 for None.
+        else:
+            serializer.u8(1)  # Write 0x01 for Some.
+            self.value.serialize(serializer)
+
+    def bcs_to_bytes(self) -> bytes:
+        """
+        Serializes this Option instance into BCS bytes.
+        """
+        serializer = Serializer()
+        self.serialize(serializer)
+        return serializer.output()
+
+    def serialize_for_entry_function(self, serializer: "Serializer") -> None:
+        """
+        For entry functions, serialize the Option using a fixed bytes length.
+        """
+        bcs_bytes = self.bcs_to_bytes()
+        serializer.fixed_bytes(bcs_bytes)
+
+    def unwrap(self) -> T:
+        if self.value is None:
+            raise Exception("Called unwrap on an Option with no value")
+        return self.value
+
+    def is_some(self) -> bool:
+        return self.value is not None
+             
+# class Royalty(Serializable):
+#     def __init__(self, numerator: int, denominator: int, payee_address: AccountAddress):
+#         self.numerator = numerator
+#         self.denominator = denominator
+#         self.payee_address = payee_address
+
+#     def serialize(self, serializer: Serializer) -> None:
+#         print("Serializing Royalty")
+#         serializer.u64(self.numerator)
+#         serializer.u64(self.denominator)
+#         serializer.struct(self.payee_address) 
 
 
 class AptosTokenV1Client:
@@ -154,18 +211,31 @@ class AptosTokenV1Client:
         royalty_points_per_million: int,
     ) -> str:
         # Create a Royalty instance
-        print(f"Acoount address type: {type(account.address())}")
-        royalty = Royalty(royalty_points_per_million, 1000000, account.address())
-        royalty_option = MoveOption(royalty)
-
+        royalty = Royalty.parse({
+            "numerator": royalty_points_per_million,
+            "denominator": 1000000,
+            "payee_address": str(account.address())
+        })
+        # royalty = Royalty(royalty_points_per_million, 1000000, account.address())
+        royalty_option = Option(royalty)
+        serialized_bytes = royalty_option.bcs_to_bytes()
+        hex_string = serialized_bytes.hex()
+        print("Serialized Royalty Option:", hex_string)
+        # pdb.set_trace()
+        # x = TransactionArgument([royalty], Serializer.sequence_serializer(Serializer.struct))
         transaction_arguments = [
             TransactionArgument(collection_name, Serializer.str),
-            TransactionArgument(description, Serializer.str),
             TransactionArgument(name, Serializer.str),
-            TransactionArgument(royalty_option, lambda serializer, value: value.serialize(serializer)),  # Use an option serializer if required
+            TransactionArgument(description, Serializer.str),
+            TransactionArgument(royalty_option, Serializer.serialize_option),  # Use an option serializer if required
             TransactionArgument(uri, Serializer.str),
         ]
-        
+        # transaction_arguments = [
+        # TransactionArgument(collection_name, Serializer.str),
+        # TransactionArgument(name, Serializer.str),
+        # TransactionArgument(description, Serializer.str),
+        # TransactionArgument(uri, Serializer.str),
+        # ]
         
         payload = EntryFunction.natural(
             "0x4::token",

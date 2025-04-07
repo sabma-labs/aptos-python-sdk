@@ -514,6 +514,8 @@ class RestClient:
             headers=headers,
             content=signed_transaction.bytes(),
         )
+        pdb.set_trace()
+        print(response)
         if response.status_code >= 400:
             raise ApiError(response.text, response.status_code)
         return response.json()["hash"]
@@ -716,9 +718,7 @@ class RestClient:
         )
         
         authenticator = sender.sign_transaction(raw_transaction)
-        # print(f"Signing payload: {raw_transaction}")
-        # print(f"Using key: {sender.private_key.hex()}")
-        # print(f"Resulting sig: {authenticator}")
+        
         return SignedTransaction(raw_transaction, authenticator)
 
     #
@@ -737,7 +737,7 @@ class RestClient:
             TransactionArgument(recipient, Serializer.struct),
             TransactionArgument(amount, Serializer.u128),
         ]
-        # pdb.set_trace()
+        pdb.set_trace()
         payload = EntryFunction.natural(
             "0x1::endless_account",
             "transfer",
