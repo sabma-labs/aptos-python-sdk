@@ -1,137 +1,15 @@
 # Copyright © Aptos Foundation
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Any, Optional
-import pdb
+from typing import Any
+
 from .account import Account
 from .account_address import AccountAddress
 from .async_client import ApiError, RestClient
 from .bcs import Serializer
 from .transactions import EntryFunction, TransactionArgument, TransactionPayload
-U64_MAX = 100
-from aptos_sdk.bcs import Serializable, Serializer
-from typing import Optional, List, TypeVar, Generic
-from .aptos_token_client import Royalty 
-T = TypeVar('T', bound='Serializable')
 
-class Royalty:
-    numerator: int
-    denominator: int
-    payee_address: AccountAddress
-
-    struct_tag: str = "0x4::royalty::Royalty"
-
-    def __init__(self, numerator, denominator, payee_address):
-        self.numerator = numerator
-        self.denominator = denominator
-        self.payee_address = payee_address
-
-    def __str__(self) -> str:
-        return f"Royalty[numerator: {self.numerator}, denominator: {self.denominator}, payee_address: {self.payee_address}]"
-
-    @staticmethod
-    def parse(resource: dict[str, Any]):
-        payee = resource["payee_address"]
-        if isinstance(payee, AccountAddress):
-            address = payee
-        else:
-            address = AccountAddress.from_str_relaxed(payee)
-        return Royalty(
-            resource["numerator"],
-            resource["denominator"],
-            address,
-        )     
-    def serialize(self, serializer: Serializer) -> None:
-        print("Serializing Royalty")
-        serializer.u64(self.numerator)
-        serializer.u64(self.denominator)
-        serializer.struct(self.payee_address)
-
-
-class Option:
-    """
-    A Python implementation of a Move Option type that serializes an optional value as:
-      - 0x00 if the value is None,
-      - 0x01 followed by the serialized value if present.
-    """
-
-    struct_tag: str = "0x1::option::Option"
-
-    def __init__(self, value) -> None:
-        self.value = value
-
-    def __str__(self) -> str:
-        if self.value is None:
-            return "Option[None]"
-        else:
-            return f"Option[Some: {self.value}]"
-
-    @staticmethod
-    def parse(resource: dict[str, Any], inner_parser) -> "Option":
-        """
-        Parse an Option from a resource dictionary.
-        
-        Args:
-            resource (dict[str, Any]): A dictionary representing the serialized option.
-            inner_parser (Callable[[Any], T]): A function that can parse the inner value.
-            
-        Returns:
-            Option[T]: The parsed Option instance.
-            
-        Note:
-            The resource dictionary is expected to have a key "tag" indicating 0 (None) or 1 (Some),
-            and if Some, a key "value" containing the serialized inner value.
-        """
-        tag = resource.get("tag")
-        if tag == 0:
-            return Option(None)
-        elif tag == 1:
-            inner_value = inner_parser(resource.get("value"))
-            return Option(inner_value)
-        else:
-            raise Exception("Invalid tag for Option")
-
-    def serialize(self, serializer: "Serializer") -> None:
-        if self.value is None:
-            serializer.u8(0)  # Write 0x00 for None.
-        else:
-            serializer.u8(1)  # Write 0x01 for Some.
-            self.value.serialize(serializer)
-
-    def bcs_to_bytes(self) -> bytes:
-        """
-        Serializes this Option instance into BCS bytes.
-        """
-        serializer = Serializer()
-        self.serialize(serializer)
-        return serializer.output()
-
-    def serialize_for_entry_function(self, serializer: "Serializer") -> None:
-        """
-        For entry functions, serialize the Option using a fixed bytes length.
-        """
-        bcs_bytes = self.bcs_to_bytes()
-        serializer.fixed_bytes(bcs_bytes)
-
-    def unwrap(self) -> T:
-        if self.value is None:
-            raise Exception("Called unwrap on an Option with no value")
-        return self.value
-
-    def is_some(self) -> bool:
-        return self.value is not None
-             
-# class Royalty(Serializable):
-#     def __init__(self, numerator: int, denominator: int, payee_address: AccountAddress):
-#         self.numerator = numerator
-#         self.denominator = denominator
-#         self.payee_address = payee_address
-
-#     def serialize(self, serializer: Serializer) -> None:
-#         print("Serializing Royalty")
-#         serializer.u64(self.numerator)
-#         serializer.u64(self.denominator)
-#         serializer.struct(self.payee_address) 
+U64_MAX = 18446744073709551615
 
 
 class AptosTokenV1Client:
@@ -142,104 +20,108 @@ class AptosTokenV1Client:
     def __init__(self, client: RestClient):
         self._client = client
 
-    async def  create_collection(
-    self,
-    account: Account,
-    description: str,
-    name: str,
-    uri: str,
-    mutable_description: bool = True,
-    mutable_royalty: bool = True,
-    mutable_uri: bool = True,
-    mutable_token_description: bool = True,
-    mutable_token_name: bool = True,
-    mutable_token_properties: bool = True,
-    mutable_token_uri: bool = True,
-    tokens_burnable_by_creator: bool = False,
-    tokens_freezable_by_creator: bool = False,
-    royalty_numerator: int = 0,
-    royalty_denominator: int = 1,
+    async def create_collection(
+        self, account: Account, name: str, description: str, uri: str
     ) -> str:
-        """
-        Creates a new collection on-chain.
-        The Move function signature (excluding the signer) is:
-        (description: string, max_supply: u64, name: string, uri: string,
-        mutable_description: bool, mutable_royalty: bool, mutable_uri: bool,
-        mutable_token_description: bool, mutable_token_name: bool,
-        mutable_token_properties: bool, mutable_token_uri: bool,
-        tokens_burnable_by_creator: bool, tokens_freezable_by_creator: bool,
-        royalty_numerator: u64, royalty_denominator: u64)
-        """
+        """Creates a new collection within the specified account"""
 
         transaction_arguments = [
-            
             TransactionArgument(description, Serializer.str),
             TransactionArgument(U64_MAX, Serializer.u64),
             TransactionArgument(name, Serializer.str),
             TransactionArgument(uri, Serializer.str),
-            TransactionArgument(mutable_description, Serializer.bool),
-            TransactionArgument(mutable_royalty, Serializer.bool),
-            TransactionArgument(mutable_uri, Serializer.bool),
-            TransactionArgument(mutable_token_description, Serializer.bool),
-            TransactionArgument(mutable_token_name, Serializer.bool),
-            TransactionArgument(mutable_token_properties, Serializer.bool),
-            TransactionArgument(mutable_token_uri, Serializer.bool),
-            TransactionArgument(tokens_burnable_by_creator, Serializer.bool),
-            TransactionArgument(tokens_freezable_by_creator, Serializer.bool),
-            TransactionArgument(royalty_numerator, Serializer.u64),
-            TransactionArgument(royalty_denominator, Serializer.u64),
+            TransactionArgument(True, Serializer.bool),
+            TransactionArgument(True, Serializer.bool),
+            TransactionArgument(True, Serializer.bool),
+            TransactionArgument(True, Serializer.bool),
+            TransactionArgument(True, Serializer.bool),
+            TransactionArgument(True, Serializer.bool),
+            TransactionArgument(True, Serializer.bool),
+            TransactionArgument(True, Serializer.bool),
+            TransactionArgument(True, Serializer.bool),
+            TransactionArgument(0, Serializer.u64),
+            TransactionArgument(100, Serializer.u64),
         ]
-        # pdb.set_trace()
+
+        # creator: & signer,
+        # description: String,
+        # max_supply: u64,
+        # name: String,
+        # uri: String,
+        # mutable_description: bool,
+        # mutable_royalty: bool,
+        # mutable_uri: bool,
+        # mutable_token_description: bool,
+        # mutable_token_name: bool,
+        # mutable_token_properties: bool,
+        # mutable_token_uri: bool,
+        # tokens_burnable_by_creator: bool,
+        # tokens_freezable_by_creator: bool,
+        # royalty_numerator: u64,
+        # royalty_denominator: u64,
+
         payload = EntryFunction.natural(
-            "0x4::nft", "create_collection", [], transaction_arguments
+            "0x4::nft",
+            "create_collection",
+            [],
+            transaction_arguments,
         )
 
         signed_transaction = await self._client.create_bcs_signed_transaction(
             account, TransactionPayload(payload)
         )
-        
         return await self._client.submit_bcs_transaction(signed_transaction)
-    
-    
+
     async def create_token(
         self,
         account: Account,
         collection_name: str,
         name: str,
         description: str,
+        supply: int,
         uri: str,
         royalty_points_per_million: int,
     ) -> str:
-        # Create a Royalty instance
-        royalty = Royalty.parse({
-            "numerator": royalty_points_per_million,
-            "denominator": 1000000,
-            "payee_address": str(account.address())
-        })
-        # royalty = Royalty(royalty_points_per_million, 1000000, account.address())
-        royalty_option = Option(royalty)
-        serialized_bytes = royalty_option.bcs_to_bytes()
-        hex_string = serialized_bytes.hex()
-        print("Serialized Royalty Option:", hex_string)
-        # pdb.set_trace()
-        # x = TransactionArgument([royalty], Serializer.sequence_serializer(Serializer.struct))
+
+        # collection: String,
+        # description: String,
+        # name: String,
+        # uri: String,
+        # property_keys: vector < String >,
+        # property_types: vector < String >,
+        # property_values: vector < vector < u8 >>,
+
         transaction_arguments = [
             TransactionArgument(collection_name, Serializer.str),
-            TransactionArgument(name, Serializer.str),
             TransactionArgument(description, Serializer.str),
-            TransactionArgument(royalty_option, Serializer.serialize_option),  # Use an option serializer if required
+            TransactionArgument(name, Serializer.str),
             TransactionArgument(uri, Serializer.str),
+            TransactionArgument([], Serializer.sequence_serializer(Serializer.str)),
+            TransactionArgument([], Serializer.sequence_serializer(Serializer.str)),
+            TransactionArgument([], Serializer.sequence_serializer(Serializer.u8))
+
+
+            # TransactionArgument(supply, Serializer.u64),
+            # TransactionArgument(supply, Serializer.u64),
+
+            # TransactionArgument(account.address(), Serializer.struct),
+            # SDK assumes per million
+            # TransactionArgument(1000000, Serializer.u64),
+            # TransactionArgument(royalty_points_per_million, Serializer.u64),
+            # TransactionArgument(
+            #     [False, False, False, False, False],
+            #     Serializer.sequence_serializer(Serializer.bool),
+            # ),
+            # TransactionArgument([], Serializer.sequence_serializer(Serializer.str)),
+            # TransactionArgument(
+            #     [], Serializer.sequence_serializer(Serializer.to_bytes)
+            # ),
+            # TransactionArgument([], Serializer.sequence_serializer(Serializer.str)),
         ]
-        # transaction_arguments = [
-        # TransactionArgument(collection_name, Serializer.str),
-        # TransactionArgument(name, Serializer.str),
-        # TransactionArgument(description, Serializer.str),
-        # TransactionArgument(uri, Serializer.str),
-        # ]
-        
+
         payload = EntryFunction.natural(
-            "0x4::token",
-            "create_named_token",
+            "0x4::nft",
+            "mint",
             [],
             transaction_arguments,
         )
