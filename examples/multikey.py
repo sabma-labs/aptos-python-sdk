@@ -1,16 +1,17 @@
+# Copyright © Endless Foundation
 # Copyright © Aptos Foundation
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
 
-from aptos_sdk import asymmetric_crypto_wrapper, ed25519, secp256k1_ecdsa
-from aptos_sdk.account import Account
-from aptos_sdk.account_address import AccountAddress
-from aptos_sdk.asymmetric_crypto_wrapper import MultiSignature, Signature
-from aptos_sdk.async_client import FaucetClient, IndexerClient, RestClient
-from aptos_sdk.authenticator import AccountAuthenticator, MultiKeyAuthenticator
-from aptos_sdk.bcs import Serializer
-from aptos_sdk.transactions import (
+from endless_sdk import asymmetric_crypto_wrapper, ed25519, secp256k1_ecdsa
+from endless_sdk.account import Account
+from endless_sdk.account_address import AccountAddress
+from endless_sdk.asymmetric_crypto_wrapper import MultiSignature, Signature
+from endless_sdk.async_client import FaucetClient, IndexerClient, RestClient
+from endless_sdk.authenticator import AccountAuthenticator, MultiKeyAuthenticator
+from endless_sdk.bcs import Serializer
+from endless_sdk.transactions import (
     EntryFunction,
     SignedTransaction,
     TransactionArgument,
@@ -75,7 +76,7 @@ async def main():
     ]
 
     payload = EntryFunction.natural(
-        "0x1::aptos_account",
+        "0x1::endless_account",
         "transfer",
         [],
         transaction_arguments,

@@ -1,20 +1,92 @@
+# Copyright © Endless Foundation
 # Copyright © Aptos Foundation
 # SPDX-License-Identifier: Apache-2.0
-
+import os 
 from typing import Any
-
 from .account import Account
 from .account_address import AccountAddress
 from .async_client import ApiError, RestClient
 from .bcs import Serializer
 from .transactions import EntryFunction, TransactionArgument, TransactionPayload
 from .type_tag import TypeTag, StructTag
-
+import pdb
+import base58
+import aiohttp
+import json
 U64_MAX = 18446744073709551615
+INDEXER_URL = os.getenv(
+    "ENDLESS_INDEXER_URL",
+    "https://idx-test.endless.link/api/v1",
+)
 
 
-class AptosTokenV1Client:
-    """A wrapper around reading and mutating AptosTokens also known as Token Objects"""
+class NFTCollection:
+    def __init__(self, json_data):
+        self.id = json_data.get('id')
+        self.creator = json_data.get('creator')
+        self.description = json_data.get('description')
+        self.name = json_data.get('name')
+        self.uri = json_data.get('uri')
+        self.current_supply = json_data.get('current_supply')
+        self.total_minted = json_data.get('total_minted')
+        self.max_supply = json_data.get('max_supply')
+        self.royalty_percent = json_data.get('royalty', {}).get('percent')
+        self.royalty_payee = json_data.get('royalty', {}).get('payee_address')
+        self.last_transaction_version = json_data.get('last_transaction_version')
+        self.last_transaction_hash = json_data.get('last_transaction_hash')
+        self.holders = json_data.get('holders')
+        self.created_at = json_data.get('created_at')
+        self.transfers = json_data.get('transfers')
+    
+    # Getter functions
+    def get_id(self):
+        return self.id
+
+    def get_creator(self):
+        return self.creator
+
+    def get_description(self):
+        return self.description
+
+    def get_name(self):
+        return self.name
+
+    def get_uri(self):
+        return self.uri
+
+    def get_current_supply(self):
+        return self.current_supply
+
+    def get_total_minted(self):
+        return self.total_minted
+
+    def get_max_supply(self):
+        return self.max_supply
+
+    def get_royalty_percent(self):
+        return self.royalty_percent
+
+    def get_royalty_payee(self):
+        return self.royalty_payee
+
+    def get_last_transaction_version(self):
+        return self.last_transaction_version
+
+    def get_last_transaction_hash(self):
+        return self.last_transaction_hash
+
+    def get_holders(self):
+        return self.holders
+
+    def get_created_at(self):
+        return self.created_at
+
+    def get_transfers(self):
+        return self.transfers
+
+
+class EndlessTokenV1Client:
+    """A wrapper around reading and mutating EndlessTokens also known as Token Objects"""
 
     _client: RestClient
 
@@ -280,49 +352,144 @@ class AptosTokenV1Client:
         return info
         # return info["amount"]
 
+    # async def get_token_data(
+    #     self,
+    #     creator: AccountAddress,
+    #     collection_name: str,
+    #     token_name: str,
+    #     property_version: int,
+    # ) -> Any:
+    #     resource = await self._client.account_resource(
+    #         creator, "0x4::token::Token"
+    #     )
+    #     return resource["data"]
+
+    #     # token_data_handle = resource["data"]["token_data"]["handle"]
+    #     #
+    #     # token_data_id = {
+    #     #     "creator": str(creator),
+    #     #     "collection": collection_name,
+    #     #     "name": token_name,
+    #     # }
+    #     #
+    #     # return await self._client.get_table_item(
+    #     #     token_data_handle,
+    #     #     "0x3::token::TokenDataId",
+    #     #     "0x3::token::TokenData",
+    #     #     token_data_id,
+    #     # )  # <:!:read_token_data_table
+    
     async def get_token_data(
         self,
-        creator: AccountAddress,
+        creator: str,
         collection_name: str,
         token_name: str,
         property_version: int,
     ) -> Any:
-        resource = await self._client.account_resource(
-            creator, "0x4::token::Token"
-        )
-        return resource["data"]
+        pdb.set_trace()
+        try:
+            # Step 1: Get collection data using the get_collection function
+            collection = await self.get_collection(creator, collection_name)
+            if not collection:
+                print("Collection not found.")
+                return None
 
-        # token_data_handle = resource["data"]["token_data"]["handle"]
-        #
-        # token_data_id = {
-        #     "creator": str(creator),
-        #     "collection": collection_name,
-        #     "name": token_name,
-        # }
-        #
-        # return await self._client.get_table_item(
-        #     token_data_handle,
-        #     "0x3::token::TokenDataId",
-        #     "0x3::token::TokenData",
-        #     token_data_id,
-        # )  # <:!:read_token_data_table
+            collection_id = collection.get("id")
+            if not collection_id:
+                print("Collection ID missing in collection data.")
+                return None
 
-    async def get_collection(
-        self, creator: AccountAddress, collection_name: str
-    ) -> Any:
-        resource = await self._client.account_resource(
-            creator, "0x4::collection::Collection"
-        )
-        return resource["data"]
+            # Step 2: Paginated fetch from history endpoint
+            page = 0
+            total_count = 0
+            while True:
+                history_url = f"{INDEXER_URL}/collections/{collection_id}/history"
+                try:
+                    async with aiohttp.ClientSession() as session:
+                        async with session.get(history_url, params={"page": page}, timeout=10) as response:
+                            response.raise_for_status()
+                            page_data = await response.json()
+                except Exception as e:
+                    print(f"Failed to fetch token history page {page} for collection {collection_id}: {e}")
+                    return None
 
-        # token_data = resource["data"]["collection_data"]["handle"]
-        #
-        # return await self._client.get_table_item(
-        #     token_data,
-        #     "0x1::string::String",
-        #     "0x3::token::CollectionData",
-        #     collection_name,
-        # )
+                # Step 3: Search for the matching token
+                data = page_data.get("data", [])
+                for token in data:
+                    token_data = token.get("token")
+                    if (
+                        token_data.get("name") == token_name and
+                        str(token_data.get("property_version", 0)) == str(property_version)
+                    ):
+                        return token
+
+                total_count+=len(data)
+                if page_data.get("total") < total_count:
+                    page += 1
+                else:
+                    break
+
+            print("Token not found in history.")
+            return None
+
+        except Exception as e:
+            print(f"An error occurred while fetching token data: {e}")
+            return None
+
+
+
+    # async def get_collection(
+    #     self, creator: AccountAddress, collection_name: str
+    # ) -> Any:
+    #     resource = await self._client.account_resource(
+    #         creator, "0x4::collection::Collection"
+    #     )
+    #     return resource["data"]
+
+    #     # token_data = resource["data"]["collection_data"]["handle"]
+    #     #
+    #     # return await self._client.get_table_item(
+    #     #     token_data,
+    #     #     "0x1::string::String",
+    #     #     "0x3::token::CollectionData",
+    #     #     collection_name,
+    #     # )
+    
+
+    async def get_collection(self, creator: str, collection_name: str) -> Any:
+        
+        try:
+            # Convert 0x address to base58 format
+            creator_bytes = bytes.fromhex(str(creator).removeprefix("0x"))
+            creator_b58 = base58.b58encode(creator_bytes).decode()
+
+            page = 0
+            base_url = f"{INDEXER_URL}/collections"
+            total_count = 0
+            async with aiohttp.ClientSession() as session:
+                while True:
+                    try:
+                        async with session.get(base_url, params={'page': page}, timeout=10) as response:
+                            response.raise_for_status()
+                            json_data = await response.json()
+                    except Exception as e:
+                        print(f"Failed to fetch page {page}: {e}")
+                        break
+
+                    data = json_data.get("data", [])
+                    for item in data:
+                        if item.get("creator") == creator_b58 and item.get("name") == collection_name:
+                            return item
+                    total_count+= len(data)
+                    if json_data.get("total") > total_count :
+                        page += 1
+                    else:
+                        break
+
+        except Exception as e:
+            print(f"An error occurred while fetching collection: {e}")
+
+        return None
 
     async def transfer_object(
         self, owner: Account, object: AccountAddress, to: AccountAddress

@@ -1,12 +1,13 @@
+# Copyright © Endless Foundation
 # Copyright © Aptos Foundation
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
 
-from aptos_sdk.account import Account
-from aptos_sdk.account_address import AccountAddress
-from aptos_sdk.aptos_token_client import AptosTokenClient, Object, Property, PropertyMap
-from aptos_sdk.async_client import FaucetClient, RestClient
+from endless_sdk.account import Account
+from endless_sdk.account_address import AccountAddress
+from endless_sdk.endless_token_client import EndlessTokenClient, Object, Property, PropertyMap
+from endless_sdk.async_client import FaucetClient, RestClient
 
 from .common import FAUCET_URL, NODE_URL
 
@@ -14,7 +15,7 @@ from .common import FAUCET_URL, NODE_URL
 async def main():
     rest_client = RestClient(NODE_URL)
     faucet_client = FaucetClient(FAUCET_URL, rest_client)
-    token_client = AptosTokenClient(rest_client)
+    token_client = EndlessTokenClient(rest_client)
     alice = Account.generate()
     bob = Account.generate()
 
@@ -43,7 +44,7 @@ async def main():
         "Alice's simple collection",
         1,
         collection_name,
-        "https://aptos.dev",
+        "https://endless.dev",
         True,
         True,
         True,

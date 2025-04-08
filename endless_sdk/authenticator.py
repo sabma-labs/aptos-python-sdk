@@ -1,3 +1,4 @@
+# Copyright © Endless Foundation
 # Copyright © Aptos Foundation
 # SPDX-License-Identifier: Apache-2.0
 
@@ -14,7 +15,7 @@ from .bcs import Deserializer, Serializer
 
 class Authenticator:
     """
-    Each transaction submitted to the Aptos blockchain contains a `TransactionAuthenticator`.
+    Each transaction submitted to the Endless blockchain contains a `TransactionAuthenticator`.
     During transaction execution, the executor will check if every `AccountAuthenticator`'s
     signature on the transaction hash is well-formed and whether `AccountAuthenticator`'s  matches
     the `AuthenticationKey` stored under the participating signer's account address.

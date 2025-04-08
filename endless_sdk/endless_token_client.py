@@ -1,3 +1,4 @@
+# Copyright © Endless Foundation
 # Copyright © Aptos Foundation
 # SPDX-License-Identifier: Apache-2.0
 
@@ -320,7 +321,7 @@ class ReadObject:
         return response
 
 
-class AptosTokenClient:
+class EndlessTokenClient:
     """A wrapper around reading and mutating Digital Assets also known as Token Objects"""
 
     client: RestClient
@@ -375,7 +376,7 @@ class AptosTokenClient:
         ]
 
         payload = EntryFunction.natural(
-            "0x4::aptos_token",
+            "0x4::endless_token",
             "create_collection",
             [],
             transaction_arguments,
@@ -403,7 +404,7 @@ class AptosTokenClient:
         royalty_numerator: int,
         royalty_denominator: int,
     ) -> str:  # <:!:create_collection
-        payload = AptosTokenClient.create_collection_payload(
+        payload = EndlessTokenClient.create_collection_payload(
             description,
             max_supply,
             name,
@@ -451,7 +452,7 @@ class AptosTokenClient:
         ]
 
         payload = EntryFunction.natural(
-            "0x4::aptos_token",
+            "0x4::endless_token",
             "mint",
             [],
             transaction_arguments,
@@ -469,7 +470,7 @@ class AptosTokenClient:
         uri: str,
         properties: PropertyMap,
     ) -> str:  # <:!:mint_token
-        payload = AptosTokenClient.mint_token_payload(
+        payload = EndlessTokenClient.mint_token_payload(
             collection, description, name, uri, properties
         )
         signed_transaction = await self.client.create_bcs_signed_transaction(
@@ -506,7 +507,7 @@ class AptosTokenClient:
         ]
 
         payload = EntryFunction.natural(
-            "0x4::aptos_token",
+            "0x4::endless_token",
             "mint_soul_bound",
             [],
             transaction_arguments,
@@ -525,7 +526,7 @@ class AptosTokenClient:
 
     async def burn_token(self, creator: Account, token: AccountAddress) -> str:
         payload = EntryFunction.natural(
-            "0x4::aptos_token",
+            "0x4::endless_token",
             "burn",
             [TypeTag(StructTag.from_str("0x4::token::Token"))],
             [TransactionArgument(token, Serializer.struct)],
@@ -538,7 +539,7 @@ class AptosTokenClient:
 
     async def freeze_token(self, creator: Account, token: AccountAddress) -> str:
         payload = EntryFunction.natural(
-            "0x4::aptos_token",
+            "0x4::endless_token",
             "freeze_transfer",
             [TypeTag(StructTag.from_str("0x4::token::Token"))],
             [TransactionArgument(token, Serializer.struct)],
@@ -551,7 +552,7 @@ class AptosTokenClient:
 
     async def unfreeze_token(self, creator: Account, token: AccountAddress) -> str:
         payload = EntryFunction.natural(
-            "0x4::aptos_token",
+            "0x4::endless_token",
             "unfreeze_transfer",
             [TypeTag(StructTag.from_str("0x4::token::Token"))],
             [TransactionArgument(token, Serializer.struct)],
@@ -569,7 +570,7 @@ class AptosTokenClient:
         transaction_arguments.extend(prop.to_transaction_arguments())
 
         payload = EntryFunction.natural(
-            "0x4::aptos_token",
+            "0x4::endless_token",
             "add_property",
             [TypeTag(StructTag.from_str("0x4::token::Token"))],
             transaction_arguments,
@@ -589,7 +590,7 @@ class AptosTokenClient:
         ]
 
         payload = EntryFunction.natural(
-            "0x4::aptos_token",
+            "0x4::endless_token",
             "remove_property",
             [TypeTag(StructTag.from_str("0x4::token::Token"))],
             transaction_arguments,
@@ -607,7 +608,7 @@ class AptosTokenClient:
         transaction_arguments.extend(prop.to_transaction_arguments())
 
         payload = EntryFunction.natural(
-            "0x4::aptos_token",
+            "0x4::endless_token",
             "update_property",
             [TypeTag(StructTag.from_str("0x4::token::Token"))],
             transaction_arguments,

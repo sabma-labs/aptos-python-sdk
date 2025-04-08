@@ -1,3 +1,4 @@
+# Copyright © Endless Foundation
 # Copyright © Aptos Foundation
 # SPDX-License-Identifier: Apache-2.0
 
@@ -5,12 +6,12 @@ import asyncio
 import os
 import sys
 
-from aptos_sdk.account import Account
-from aptos_sdk.aptos_cli_wrapper import AptosCLIWrapper
-from aptos_sdk.async_client import FaucetClient, RestClient
-from aptos_sdk.package_publisher import MODULE_ADDRESS, PackagePublisher, PublishMode
+from endless_sdk.account import Account
+from endless_sdk.endless_cli_wrapper import EndlessCLIWrapper
+from endless_sdk.async_client import FaucetClient, RestClient
+from endless_sdk.package_publisher import MODULE_ADDRESS, PackagePublisher, PublishMode
 
-from .common import APTOS_CORE_PATH, FAUCET_AUTH_TOKEN, FAUCET_URL, NODE_URL
+from .common import ENDLESS_CORE_PATH, FAUCET_AUTH_TOKEN, FAUCET_URL, NODE_URL
 
 
 async def main(package_dir):
@@ -33,8 +34,8 @@ async def main(package_dir):
     module_name = "hello_blockchain"
 
     print("\nCompiling package...")
-    if AptosCLIWrapper.does_cli_exist():
-        AptosCLIWrapper.compile_package(package_dir, {module_name: code_object_address})
+    if EndlessCLIWrapper.does_cli_exist():
+        EndlessCLIWrapper.compile_package(package_dir, {module_name: code_object_address})
     else:
         print(f"Address of the object to be created: {code_object_address}")
         input(
@@ -70,8 +71,8 @@ if __name__ == "__main__":
         package_dir = sys.argv[1]
     else:
         package_dir = os.path.join(
-            APTOS_CORE_PATH,
-            "aptos-move",
+            ENDLESS_CORE_PATH,
+            "endless-move",
             "move-examples",
             "hello_blockchain",
         )

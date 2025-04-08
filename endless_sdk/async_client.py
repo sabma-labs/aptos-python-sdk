@@ -1,3 +1,4 @@
+# Copyright © Endless Foundation
 # Copyright © Aptos Foundation
 # SPDX-License-Identifier: Apache-2.0
 
@@ -26,7 +27,7 @@ from .transactions import (
 from .type_tag import StructTag, TypeTag
 
 U64_MAX = 18446744073709551615
-from aptos_sdk.bcs import encoder 
+from endless_sdk.bcs import encoder 
 
 @dataclass
 class ClientConfig:
@@ -41,7 +42,7 @@ class ClientConfig:
 
 
 class IndexerClient:
-    """A wrapper around the Aptos Indexer Service on Hasura"""
+    """A wrapper around the Endless Indexer Service on Hasura"""
 
     client: python_graphql_client.GraphqlClient
 
@@ -57,8 +58,9 @@ class IndexerClient:
         return await self.client.execute_async(query, variables)
 
 
+
 class RestClient:
-    """A wrapper around the Aptos-core Rest API"""
+    """A wrapper around the Endless-core Rest API"""
 
     _chain_id: Optional[int]
     client: httpx.AsyncClient
@@ -73,7 +75,7 @@ class RestClient:
         # long as progress is being made.
         timeout = httpx.Timeout(60.0, pool=None)
         # Default headers
-        headers = {Metadata.APTOS_HEADER: Metadata.get_aptos_header_val()}
+        headers = {Metadata.Endless_HEADER: Metadata.get_endless_header_val()}
         self.client = httpx.AsyncClient(
             http2=client_config.http2,
             limits=limits,
@@ -120,11 +122,11 @@ class RestClient:
         self, account_address: AccountAddress, ledger_version: Optional[int] = None
     ) -> int:
         """
-        Fetch the Aptos coin balance associated with the account.
+        Fetch the Endless coin balance associated with the account.
 
         :param account_address: Address of the account, with or without a '0x' prefix.
         :param ledger_version: Ledger version to get state of account. If not provided, it will be the latest version.
-        :return: The Aptos coin balance associated with the account
+        :return: The Endless coin balance associated with the account
         """
         result = await self.view_bcs_payload(
             "0x1::endless_coin",
@@ -162,7 +164,7 @@ class RestClient:
         """
         Retrieves an individual resource from a given account and at a specific ledger version.
 
-        The Aptos nodes prune account state history, via a configurable time window. If the requested ledger version
+        The Endless nodes prune account state history, via a configurable time window. If the requested ledger version
         has been pruned, the server responds with a 410.
 
         :param account_address: Address of the account, with or without a '0x' prefix.
@@ -188,7 +190,7 @@ class RestClient:
         """
         Retrieves all account resources for a given account and a specific ledger version.
 
-        The Aptos nodes prune account state history, via a configurable time window. If the requested ledger version
+        The Endless nodes prune account state history, via a configurable time window. If the requested ledger version
         has been pruned, the server responds with a 410.
 
         :param account_address: Address of the account, with or without a '0x' prefix.
@@ -214,7 +216,7 @@ class RestClient:
         """
         Retrieves an individual module from a given account and at a specific ledger version.
 
-        The Aptos nodes prune account state history, via a configurable time window. If the requested ledger version
+        The Endless nodes prune account state history, via a configurable time window. If the requested ledger version
         has been pruned, the server responds with a 410.
 
         :param account_address: Address of the account, with or without a '0x' prefix.
@@ -241,7 +243,7 @@ class RestClient:
         """
         Retrieves all account modules' bytecode for a given account at a specific ledger version.
 
-        The Aptos nodes prune account state history, via a configurable time window. If the requested ledger version
+        The Endless nodes prune account state history, via a configurable time window. If the requested ledger version
         has been pruned, the server responds with a 410.
 
         :param account_address: Address of the account, with or without a '0x' prefix.
@@ -514,8 +516,7 @@ class RestClient:
             headers=headers,
             content=signed_transaction.bytes(),
         )
-        pdb.set_trace()
-        print(response)
+        
         if response.status_code >= 400:
             raise ApiError(response.text, response.status_code)
         return response.json()["hash"]
@@ -737,7 +738,7 @@ class RestClient:
             TransactionArgument(recipient, Serializer.struct),
             TransactionArgument(amount, Serializer.u128),
         ]
-        pdb.set_trace()
+    
         payload = EntryFunction.natural(
             "0x1::endless_account",
             "transfer",
@@ -811,7 +812,7 @@ class RestClient:
         """
         Execute a view Move function with the given parameters and return its execution result.
 
-        The Aptos nodes prune account state history, via a configurable time window. If the requested ledger version
+        The Endless nodes prune account state history, via a configurable time window. If the requested ledger version
         has been pruned, the server responds with a 410.
 
         :param function: Entry function id is string representation of an entry function defined on-chain.
@@ -854,7 +855,7 @@ class RestClient:
         view function in bcs format. This is convenient for clients that execute functions in
         transactions similar to view functions.
 
-        The Aptos nodes prune account state history, via a configurable time window. If the requested ledger version
+        The Endless nodes prune account state history, via a configurable time window. If the requested ledger version
         has been pruned, the server responds with a 410.
 
         :param function: Entry function id is string representation of an entry function defined on-chain.

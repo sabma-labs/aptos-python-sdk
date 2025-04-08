@@ -1,3 +1,4 @@
+# Copyright © Endless Foundation
 # Copyright © Aptos Foundation
 # SPDX-License-Identifier: Apache-2.0
 
@@ -10,33 +11,33 @@ import os
 import unittest
 from typing import Optional
 
-from aptos_sdk.account_address import AccountAddress
-from aptos_sdk.aptos_cli_wrapper import AptosCLIWrapper, AptosInstance
+from endless_sdk.account_address import AccountAddress
+from endless_sdk.endless_cli_wrapper import EndlessCLIWrapper, EndlessInstance
 
-from .common import APTOS_CORE_PATH
+from .common import ENDLESS_CORE_PATH
 
 
 class Test(unittest.IsolatedAsyncioTestCase):
-    _node: Optional[AptosInstance] = None
+    _node: Optional[EndlessInstance] = None
 
     @classmethod
     def setUpClass(self):
-        if os.getenv("APTOS_TEST_USE_EXISTING_NETWORK"):
+        if os.getenv("ENDLESS_TEST_USE_EXISTING_NETWORK"):
             return
 
-        self._node = AptosCLIWrapper.start_node()
+        self._node = EndlessCLIWrapper.start_node()
         operational = asyncio.run(self._node.wait_until_operational())
         if not operational:
             raise Exception("".join(self._node.errors()))
 
-        os.environ["APTOS_FAUCET_URL"] = "http://127.0.0.1:8081"
-        os.environ["APTOS_INDEXER_CLIENT"] = "none"
-        os.environ["APTOS_NODE_URL"] = "http://127.0.0.1:8080/v1"
+        os.environ["ENDLESS_FAUCET_URL"] = "http://127.0.0.1:8081"
+        os.environ["ENDLESS_INDEXER_CLIENT"] = "none"
+        os.environ["ENDLESS_NODE_URL"] = "https://rpc-test.endless.link/v1"
 
-    async def test_aptos_token(self):
-        from . import aptos_token
+    async def test_endless_token(self):
+        from . import endless_token
 
-        await aptos_token.main()
+        await endless_token.main()
 
     async def test_fee_payer_transfer_coin(self):
         from . import fee_payer_transfer_coin
@@ -47,9 +48,9 @@ class Test(unittest.IsolatedAsyncioTestCase):
         from . import hello_blockchain
 
         hello_blockchain_dir = os.path.join(
-            APTOS_CORE_PATH, "aptos-move", "move-examples", "hello_blockchain"
+            ENDLESS_CORE_PATH, "endless-move", "move-examples", "hello_blockchain"
         )
-        AptosCLIWrapper.test_package(
+        EndlessCLIWrapper.test_package(
             hello_blockchain_dir, {"hello_blockchain": AccountAddress.from_str("0xa")}
         )
         contract_address = await hello_blockchain.publish_contract(hello_blockchain_dir)
@@ -62,7 +63,7 @@ class Test(unittest.IsolatedAsyncioTestCase):
         from . import large_package_publisher
 
         large_packages_dir = os.path.join(
-            APTOS_CORE_PATH, "aptos-move", "move-examples", "large_packages"
+            ENDLESS_CORE_PATH, "endless-move", "move-examples", "large_packages"
         )
         module_addr = await large_package_publisher.publish_large_packages(
             large_packages_dir
@@ -97,10 +98,10 @@ class Test(unittest.IsolatedAsyncioTestCase):
 
         await secp256k1_ecdsa_transfer_coin.main()
 
-    async def test_simple_aptos_token(self):
-        from . import simple_aptos_token
+    async def test_simple_endless_token(self):
+        from . import simple_endless_token
 
-        await simple_aptos_token.main()
+        await simple_endless_token.main()
 
     async def test_simple_nft(self):
         from . import simple_nft
@@ -126,16 +127,16 @@ class Test(unittest.IsolatedAsyncioTestCase):
         from . import your_coin
 
         moon_coin_path = os.path.join(
-            APTOS_CORE_PATH, "aptos-move", "move-examples", "moon_coin"
+            ENDLESS_CORE_PATH, "endless-move", "move-examples", "moon_coin"
         )
-        AptosCLIWrapper.test_package(
+        EndlessCLIWrapper.test_package(
             moon_coin_path, {"MoonCoin": AccountAddress.from_str("0xa")}
         )
         await your_coin.main(moon_coin_path)
 
     @classmethod
     def tearDownClass(self):
-        if os.getenv("APTOS_TEST_USE_EXISTING_NETWORK"):
+        if os.getenv("ENDLESS_TEST_USE_EXISTING_NETWORK"):
             return
 
         self._node.stop()

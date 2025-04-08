@@ -1,3 +1,4 @@
+# Copyright © Endless Foundation
 # Copyright © Aptos Foundation
 # SPDX-License-Identifier: Apache-2.0
 
@@ -10,14 +11,14 @@ from multiprocessing import Pipe, Process
 from multiprocessing.connection import Connection
 from typing import Any, List
 
-from aptos_sdk.account import Account
-from aptos_sdk.account_address import AccountAddress
-from aptos_sdk.account_sequence_number import AccountSequenceNumber
-from aptos_sdk.aptos_token_client import AptosTokenClient, Property, PropertyMap
-from aptos_sdk.async_client import ClientConfig, FaucetClient, RestClient
-from aptos_sdk.bcs import Serializer
-from aptos_sdk.transaction_worker import TransactionWorker
-from aptos_sdk.transactions import (
+from endless_sdk.account import Account
+from endless_sdk.account_address import AccountAddress
+from endless_sdk.account_sequence_number import AccountSequenceNumber
+from endless_sdk.endless_token_client import EndlessTokenClient, Property, PropertyMap
+from endless_sdk.async_client import ClientConfig, FaucetClient, RestClient
+from endless_sdk.bcs import Serializer
+from endless_sdk.transaction_worker import TransactionWorker
+from endless_sdk.transactions import (
     EntryFunction,
     SignedTransaction,
     TransactionArgument,
@@ -209,7 +210,7 @@ async def transfer_transaction(
         TransactionArgument(amount, Serializer.u64),
     ]
     payload = EntryFunction.natural(
-        "0x1::aptos_account",
+        "0x1::endlesss_account",
         "transfer",
         [],
         transaction_arguments,
@@ -232,11 +233,11 @@ async def token_transaction(
 ) -> SignedTransaction:
     collection_name = "Funky Alice's"
     if sequence_number == 8351:
-        payload = AptosTokenClient.create_collection_payload(
+        payload = EndlessTokenClient.create_collection_payload(
             "Alice's simple collection",
             20000000000,
             collection_name,
-            "https://aptos.dev",
+            "https://endless.dev",
             True,
             True,
             True,
@@ -250,7 +251,7 @@ async def token_transaction(
             1,
         )
     else:
-        payload = AptosTokenClient.mint_token_payload(
+        payload = EndlessTokenClient.mint_token_payload(
             collection_name,
             "Alice's simple token",
             f"token {sequence_number}",

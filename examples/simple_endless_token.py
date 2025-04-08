@@ -1,20 +1,21 @@
+# Copyright © Endless Foundation
 # Copyright © Aptos Foundation
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
 import json
 
-from aptos_sdk.account import Account
-from aptos_sdk.account_address import AccountAddress
-from aptos_sdk.aptos_token_client import (
-    AptosTokenClient,
+from endless_sdk.account import Account
+from endless_sdk.account_address import AccountAddress
+from endless_sdk.endless_token_client import (
+    EndlessTokenClient,
     Collection,
     Object,
     PropertyMap,
     ReadObject,
     Token,
 )
-from aptos_sdk.async_client import FaucetClient, RestClient
+from endless_sdk.async_client import FaucetClient, RestClient
 
 from .common import FAUCET_AUTH_TOKEN, FAUCET_URL, NODE_URL
 
@@ -25,7 +26,7 @@ def get_owner(obj: ReadObject) -> AccountAddress:
 
 # :!:>section_6
 async def get_collection_data(
-    token_client: AptosTokenClient, collection_addr: AccountAddress
+    token_client: EndlessTokenClient, collection_addr: AccountAddress
 ) -> dict[str, str]:
     collection = (await token_client.read_object(collection_addr)).resources[Collection]
     return {
@@ -38,7 +39,7 @@ async def get_collection_data(
 
 # :!:>get_token_data
 async def get_token_data(
-    token_client: AptosTokenClient, token_addr: AccountAddress
+    token_client: EndlessTokenClient, token_addr: AccountAddress
 ) -> dict[str, str]:
     token = (await token_client.read_object(token_addr)).resources[Token]
     return {
@@ -60,7 +61,7 @@ async def main():
 
     # Create client for working with the token module.
     # :!:>section_1b
-    token_client = AptosTokenClient(rest_client)  # <:!:section_1b
+    token_client = EndlessTokenClient(rest_client)  # <:!:section_1b
 
     # :!:>section_2
     alice = Account.generate()
@@ -96,7 +97,7 @@ async def main():
         "Alice's simple collection",
         1,
         collection_name,
-        "https://aptos.dev",
+        "https://endless.dev",
         True,
         True,
         True,

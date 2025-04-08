@@ -1,3 +1,4 @@
+# Copyright © Endless Foundation
 # Copyright © Aptos Foundation
 # SPDX-License-Identifier: Apache-2.0
 
@@ -5,12 +6,12 @@
 This example depends on the hello_blockchain.move module having already been published to the destination blockchain.
 
 One method to do so is to use the CLI:
-    * Acquire the Aptos CLI
+    * Acquire the Endless CLI
     * `cd ~`
-    * `aptos init`
-    * `cd ~/aptos-core/aptos-move/move-examples/hello_blockchain`
-    * `aptos move publish --named-addresses hello_blockchain=${your_address_from_aptos_init}`
-    * `python -m examples.hello-blockchain ${your_address_from_aptos_init}`
+    * `endless init`
+    * `cd ~/endless-core/endless-move/move-examples/hello_blockchain`
+    * `endless move publish --named-addresses hello_blockchain=${your_address_from_endless_init}`
+    * `python -m examples.hello-blockchain ${your_address_from_endless_init}`
 """
 
 import asyncio
@@ -18,13 +19,13 @@ import os
 import sys
 from typing import Any, Dict, Optional
 
-from aptos_sdk.account import Account
-from aptos_sdk.account_address import AccountAddress
-from aptos_sdk.aptos_cli_wrapper import AptosCLIWrapper
-from aptos_sdk.async_client import FaucetClient, ResourceNotFound, RestClient
-from aptos_sdk.bcs import Serializer
-from aptos_sdk.package_publisher import PackagePublisher
-from aptos_sdk.transactions import (
+from endless_sdk.account import Account
+from endless_sdk.account_address import AccountAddress
+from endless_sdk.endless_cli_wrapper import EndlessCLIWrapper
+from endless_sdk.async_client import FaucetClient, ResourceNotFound, RestClient
+from endless_sdk.bcs import Serializer
+from endless_sdk.package_publisher import PackagePublisher
+from endless_sdk.transactions import (
     EntryFunction,
     TransactionArgument,
     TransactionPayload,
@@ -68,7 +69,7 @@ async def publish_contract(package_dir: str) -> AccountAddress:
     faucet_client = FaucetClient(FAUCET_URL, rest_client, FAUCET_AUTH_TOKEN)
     await faucet_client.fund_account(contract_publisher.address(), 10_000_000)
 
-    AptosCLIWrapper.compile_package(
+    EndlessCLIWrapper.compile_package(
         package_dir, {"hello_blockchain": contract_publisher.address()}
     )
 

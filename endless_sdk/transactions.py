@@ -1,8 +1,9 @@
+# Copyright © Endless Foundation
 # Copyright © Aptos Foundation
 # SPDX-License-Identifier: Apache-2.0
 
 """
-This translates Aptos transactions to and from BCS for signing and submitting to the REST API.
+This translates Endless transactions to and from BCS for signing and submitting to the REST API.
 """
 
 from __future__ import annotations
@@ -102,7 +103,7 @@ class RawTransaction(Deserializable, RawTransactionInternal, Serializable):
     gas_unit_price: int
     # Expiration timestamp for this transaction, represented as seconds from the Unix epoch.
     expiration_timestamps_secs: int
-    # Chain ID of the Aptos network this transaction is intended for.
+    # Chain ID of the Endless network this transaction is intended for.
     chain_id: int
 
     def __init__(
@@ -614,9 +615,9 @@ class Test(unittest.TestCase):
         ]
 
         payload = EntryFunction.natural(
-            "0x1::coin",
+            "0x4::coin",
             "transfer",
-            [TypeTag(StructTag.from_str("0x1::aptos_coin::AptosCoin"))],
+            [],
             transaction_arguments,
         )
 
@@ -666,9 +667,9 @@ class Test(unittest.TestCase):
         ]
 
         payload = EntryFunction.natural(
-            "0x1::coin",
+            "0x4::coin",
             "transfer",
-            [TypeTag(StructTag.from_str("0x1::aptos_coin::AptosCoin"))],
+            [],
             transaction_arguments,
         )
 

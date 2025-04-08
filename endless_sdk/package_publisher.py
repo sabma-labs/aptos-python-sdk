@@ -1,3 +1,4 @@
+# Copyright © Endless Foundation
 # Copyright © Aptos Foundation
 # SPDX-License-Identifier: Apache-2.0
 
@@ -22,7 +23,7 @@ MODULE_ADDRESS: AccountAddress = AccountAddress.from_str(
 )
 
 # Domain separator for the code object address derivation
-OBJECT_CODE_DEPLOYMENT_DOMAIN_SEPARATOR = b"aptos_framework::object_code_deployment"
+OBJECT_CODE_DEPLOYMENT_DOMAIN_SEPARATOR = b"endless_framework::object_code_deployment"
 
 
 class PublishMode(Enum):

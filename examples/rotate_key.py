@@ -1,14 +1,14 @@
 import asyncio
 from typing import List, cast
 
-import aptos_sdk.asymmetric_crypto as asymmetric_crypto
-import aptos_sdk.ed25519 as ed25519
-from aptos_sdk.account import Account, RotationProofChallenge
-from aptos_sdk.account_address import AccountAddress
-from aptos_sdk.async_client import FaucetClient, RestClient
-from aptos_sdk.authenticator import Authenticator
-from aptos_sdk.bcs import Serializer
-from aptos_sdk.transactions import (
+import endless_sdk.asymmetric_crypto as asymmetric_crypto
+import endless_sdk.ed25519 as ed25519
+from endless_sdk.account import Account, RotationProofChallenge
+from endless_sdk.account_address import AccountAddress
+from endless_sdk.async_client import FaucetClient, RestClient
+from endless_sdk.authenticator import Authenticator
+from endless_sdk.bcs import Serializer
+from endless_sdk.transactions import (
     EntryFunction,
     TransactionArgument,
     TransactionPayload,

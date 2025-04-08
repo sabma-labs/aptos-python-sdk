@@ -1,3 +1,4 @@
+# Copyright © Endless Foundation
 # Copyright © Aptos Foundation
 # SPDX-License-Identifier: Apache-2.0
 
@@ -5,13 +6,13 @@ import asyncio
 import subprocess
 import time
 
-from aptos_sdk.account import Account, RotationProofChallenge
-from aptos_sdk.account_address import AccountAddress
-from aptos_sdk.async_client import FaucetClient, RestClient
-from aptos_sdk.authenticator import Authenticator, MultiEd25519Authenticator
-from aptos_sdk.bcs import Serializer
-from aptos_sdk.ed25519 import MultiPublicKey, MultiSignature
-from aptos_sdk.transactions import (
+from endless_sdk.account import Account, RotationProofChallenge
+from endless_sdk.account_address import AccountAddress
+from endless_sdk.async_client import FaucetClient, RestClient
+from endless_sdk.authenticator import Authenticator, MultiEd25519Authenticator
+from endless_sdk.bcs import Serializer
+from endless_sdk.ed25519 import MultiPublicKey, MultiSignature
+from endless_sdk.transactions import (
     EntryFunction,
     RawTransaction,
     Script,
@@ -20,9 +21,9 @@ from aptos_sdk.transactions import (
     TransactionArgument,
     TransactionPayload,
 )
-from aptos_sdk.type_tag import StructTag, TypeTag
+from endless_sdk.type_tag import StructTag, TypeTag
 
-from .common import APTOS_CORE_PATH, FAUCET_AUTH_TOKEN, FAUCET_URL, NODE_URL
+from .common import ENDLESS_CORE_PATH, FAUCET_AUTH_TOKEN, FAUCET_URL, NODE_URL
 
 should_wait = True
 
@@ -107,12 +108,12 @@ async def main(should_wait_input=True):
 
     # :!:>section_4
     entry_function = EntryFunction.natural(
-        module="0x1::coin",
+        module="0x4::coin",
         function="transfer",
-        ty_args=[TypeTag(StructTag.from_str("0x1::aptos_coin::AptosCoin"))],
+        ty_args=[],
         args=[
             TransactionArgument(chad.address(), Serializer.struct),
-            TransactionArgument(100, Serializer.u64),
+            TransactionArgument(100, Serializer.u128),
         ],
     )
 
@@ -263,16 +264,16 @@ async def main(should_wait_input=True):
     # :!:>section_10
     print("\n=== Genesis publication ===")
 
-    packages_dir = f"{APTOS_CORE_PATH}/aptos-move/move-examples/upgrade_and_govern/"
+    packages_dir = f"{ENDLESS_CORE_PATH}/endless-move/move-examples/upgrade_and_govern/"
 
     command = (
-        f"aptos move compile "
+        f"endless move compile "
         f"--save-metadata "
         f"--package-dir {packages_dir}genesis "
         f"--named-addresses upgrade_and_govern={str(deedee.address())}"
     )
 
-    print(f"Running aptos CLI command: {command}\n")
+    print(f"Running endless CLI command: {command}\n")
     subprocess.run(command.split(), stdout=subprocess.PIPE)
 
     build_path = f"{packages_dir}genesis/build/UpgradeAndGovern/"
@@ -341,13 +342,13 @@ async def main(should_wait_input=True):
     print("\n=== Upgrade publication ===")
 
     command = (
-        f"aptos move compile "
+        f"endless move compile "
         f"--save-metadata "
         f"--package-dir {packages_dir}upgrade "
         f"--named-addresses upgrade_and_govern={str(deedee.address())}"
     )
 
-    print(f"Running aptos CLI command: {command}\n")
+    print(f"Running endless CLI command: {command}\n")
     subprocess.run(command.split(), stdout=subprocess.PIPE)
 
     build_path = f"{packages_dir}upgrade/build/UpgradeAndGovern/"

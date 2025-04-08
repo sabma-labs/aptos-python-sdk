@@ -1,9 +1,9 @@
-# Aptos Python SDK
+# Endless Python SDK
 [![Discord][discord-image]][discord-url]
 [![PyPI Package Version][pypi-image-version]][pypi-url]
 [![PyPI Package Downloads][pypi-image-downloads]][pypi-url]
 
-This provides basic functionalities to interact with [Aptos](https:/github.com/aptos-labs/aptos-core/). Get started [here](https://aptos.dev/guides/system-integrators-guide/#getting-started).
+This provides basic functionalities to interact with [Endless](https://github.com/endless-labs). Get started [here](https://docs.endless.link/endless/devbuild/start).
 
 Currently, this is still in development and may not be suitable for production purposes.
 
@@ -22,29 +22,29 @@ poetry install
 make test
 ```
 
-## E2E testing and Using the Aptos CLI
+## E2E testing and Using the Endless CLI
 
-* Download and install the [Aptos CLI](https://aptos.dev/tools/aptos-cli/use-cli/running-a-local-network).
-* Set the environment variable `APTOS_CLI_PATH` to the full path of the CLI.
-* Retrieve the [Aptos Core Github Repo](https://github.com/aptos-labs/aptos-core) (git clone https://github.com/aptos-labs/aptos-core)
-* Set the environment variable `APTOS_CORE_REPO` to the full path of the Repository.
+* Download and install the [Endless CLI](https://docs.endless.link/endless/devbuild/build/endless-cli).
+* Set the environment variable `ENDLESS_CLI_PATH` to the full path of the CLI.
+* Retrieve the [Endless Core Github Repo](https://github.com/endless-labs/endless-move-framework) (git clone https://github.com/endless-labs/endless-move-framework.git)
+* Set the environment variable `ENDLESS_CORE_REPO` to the full path of the Repository.
 * `make integration_test`
 
 You can do this a bit more manually by:
 
-First, run a local testnet (run this from the root of aptos-core):
+First, run a local testnet (run this from the root of endless-framework):
 
 ```bash
-aptos node run-local-testnet --force-restart --assume-yes --with-indexer-api
+endless node run-local-testnet --force-restart --assume-yes --with-indexer-api
 ```
 
 Next, tell the end-to-end tests to talk to this locally running testnet:
 
 ```bash
-export APTOS_CORE_REPO="/path/to/repo"
-export APTOS_FAUCET_URL="http://127.0.0.1:8081"
-export APTOS_INDEXER_URL="http://127.0.0.1:8090/v1/graphql"
-export APTOS_NODE_URL="http://127.0.0.1:8080/v1"
+export ENDLESS_CORE_REPO="/path/to/repo"
+export ENDLESS_FAUCET_URL="http://127.0.0.1:8081"
+export ENDLESS_INDEXER_URL="https://idx-test.endless.link/api/v1"
+export ENDLESS_NODE_URL="https://rpc-test.endless.link/v1"
 ```
 
 Finally run the tests:
@@ -53,14 +53,14 @@ Finally run the tests:
 make examples
 ```
 
-Integration Testing Using the Aptos CLI:
+Integration Testing Using the Endless CLI:
 
 ```bash
 make integration_test
 ```
 
 > [!NOTE]
-> The Python SDK does not require the Indexer, if you would prefer to test without it, unset or do not set the environmental variable `APTOS_INDEXER_URL` and exclude `--with-indexer-api` from running the aptos node software.
+> The Python SDK does not require the Indexer, if you would prefer to test without it, unset or do not set the environmental variable `ENDLESS_INDEXER_URL` and exclude `--with-indexer-api` from running the endless node software.
 
 ## Autoformatting
 ```bash
@@ -74,16 +74,16 @@ make lint
 
 ## Package Publishing
 
-* Download the [Aptos CLI](https://aptos.dev/tools/aptos-cli/install-cli/).
-* Set the environment variable `APTOS_CLI_PATH` to the full path of the CLI.
-* `poetry run python -m aptos_sdk.cli` and set the appropriate command-line parameters
+* Download the [ENDLESS CLI](https://docs.endless.link/endless/devbuild/build/endless-cli).
+* Set the environment variable `ENDLESS_CLI_PATH` to the full path of the CLI.
+* `poetry run python -m endless_sdk.cli` and set the appropriate command-line parameters
 
 ## Semantic versioning
 This project follows [semver](https://semver.org/) as closely as possible
 
-[repo]: https://github.com/aptos-labs/aptos-core
-[pypi-image-version]: https://img.shields.io/pypi/v/aptos-sdk.svg
-[pypi-image-downloads]: https://img.shields.io/pypi/dm/aptos-sdk.svg
-[pypi-url]: https://pypi.org/project/aptos-sdk
+[repo]: https://github.com/endless-labs/endless-move-framework
+[pypi-image-version]: https://img.shields.io/pypi/v/endless-sdk.svg
+[pypi-image-downloads]: https://img.shields.io/pypi/dm/endless-sdk.svg
+[pypi-url]: https://pypi.org/project/endless-sdk
 [discord-image]: https://img.shields.io/discord/945856774056083548?label=Discord&logo=discord&style=flat~~~~
-[discord-url]: https://discord.gg/aptosnetwork
+[discord-url]: https://discord.gg/endlessnetwork

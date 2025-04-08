@@ -1,3 +1,4 @@
+# Copyright © Endless Foundation
 # Copyright © Aptos Foundation
 # SPDX-License-Identifier: Apache-2.0
 
@@ -15,7 +16,7 @@ from .transactions import RawTransactionInternal
 
 
 class Account:
-    """Represents an account as well as the private, public key-pair for the Aptos blockchain."""
+    """Represents an account as well as the private, public key-pair for the Endless blockchain."""
 
     account_address: AccountAddress
     private_key: asymmetric_crypto.PrivateKey
@@ -90,6 +91,7 @@ class Account:
     def sign_transaction(
         self, transaction: RawTransactionInternal
     ) -> AccountAuthenticator:
+        print(self.private_key)
         return transaction.sign(self.private_key)
 
     def public_key(self) -> asymmetric_crypto.PublicKey:

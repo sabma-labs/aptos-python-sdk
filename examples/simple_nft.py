@@ -1,3 +1,4 @@
+# Copyright © Endless Foundation
 # Copyright © Aptos Foundation
 # SPDX-License-Identifier: Apache-2.0
 
@@ -5,11 +6,11 @@ import asyncio
 import json
 
 import base58
-
-from aptos_sdk.account import Account
-from aptos_sdk.account_address import AccountAddress
-from aptos_sdk.aptos_tokenv1_client import AptosTokenV1Client
-from aptos_sdk.async_client import FaucetClient, RestClient
+import pdb
+from endless_sdk.account import Account
+from endless_sdk.account_address import AccountAddress
+from endless_sdk.endless_tokenv1_client import EndlessTokenV1Client
+from endless_sdk.async_client import FaucetClient, RestClient
 
 from .common import FAUCET_AUTH_TOKEN, FAUCET_URL, NODE_URL
 
@@ -17,13 +18,13 @@ from .common import FAUCET_AUTH_TOKEN, FAUCET_URL, NODE_URL
 async def main():
     rest_client = RestClient(NODE_URL)
     faucet_client = FaucetClient(FAUCET_URL, rest_client, FAUCET_AUTH_TOKEN)
-    token_client = AptosTokenV1Client(rest_client)
+    token_client = EndlessTokenV1Client(rest_client)
 
     # :!:>section_2
-    alice = Account.load_key("")
-    bob = Account.load_key("")  # <:!:section_2
+    alice = Account.load_key("0xcd237d5eb2ee4bfba26b3a8d9dcbe9df3eea33b6409a79e77018a58a5c59411c")
+    bob = Account.load_key("0xf916a2c77c0e07d408d1cb348284c71bf012b9c1d8a33bad1a7aee4fdbaa86ad")  # <:!:section_2
 
-    collection_name = "xxx 040700"
+    collection_name = "niraj 040710"
     token_name = collection_name + " first token"
     property_version = 0
 
@@ -47,21 +48,20 @@ async def main():
 
     # :!:>section_4
     txn_hash = await token_client.create_collection(
-        alice, collection_name, collection_name +  " simple collection", "https://aptos.dev"
+        alice, collection_name, collection_name +  " simple collection", "https://endless.dev"
     )  # <:!:section_4
     await rest_client.wait_for_transaction(txn_hash)
-
     tx_info = await rest_client.transaction_by_hash(txn_hash)
 
-    collection_address = alice.address()
+    # collection_address = alice.address()
 
-    for tx in tx_info["changes"]:
-        if tx["data"]["type"] == "0x4::collection::Collection":
-            collection_address = tx["address"]
-            break
+    # for tx in tx_info["changes"]:
+    #     if tx["data"]["type"] == "0x4::collection::Collection":
+    #         collection_address = tx["address"]
+    #         break
 
     # :!:>section_5
-    token_address = alice.address()
+    # token_address = alice.address()
     txn_hash = await token_client.create_token(
         alice,
         collection_name,
@@ -75,33 +75,33 @@ async def main():
 
     tx_info = await rest_client.transaction_by_hash(txn_hash)
 
-    for tx in tx_info["changes"]:
-        if tx["data"]["type"] == "0x4::token::Token":
-            token_address = tx["address"]
-            break
+    # for tx in tx_info["changes"]:
+    #     if tx["data"]["type"] == "0x4::token::Token":
+    #         token_address = tx["address"]
+    #         break
 
     # :!:>section_6
     collection_data = await token_client.get_collection(
-        collection_address, collection_name
+        alice.address(), collection_name
     )
     print(
         f"Alice's collection: {json.dumps(collection_data, indent=4, sort_keys=True)}"
     )  # <:!:section_6
-    # :!:>section_7
-    balance = await token_client.get_token_balance(
-        collection_address, alice.address(), collection_name, token_name, property_version
-    )
-    print(f"Alice's token balance: {balance}")  # <:!:section_7
+    # # :!:>section_7
+    # balance = await token_client.get_token_balance(
+    #     collection_address, alice.address(), collection_name, token_name, property_version
+    # )
+    # print(f"Alice's token balance: {balance}")  # <:!:section_7
     # :!:>section_8
     token_data = await token_client.get_token_data(
-        token_address, collection_name, token_name, property_version
+        alice.address(), collection_name, token_name, property_version
     )
     print(
         f"Alice's token data: {json.dumps(token_data, indent=4, sort_keys=True)}"
     )  # <:!:section_8
 
     print("\n=== Transferring the token to Bob ===")
-
+    token_address = token_data.get("token").get("id")
     token_address_hex = f"0x{base58.b58decode(token_address).hex()}"
 
     # :!:>section_9

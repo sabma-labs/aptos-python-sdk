@@ -1,3 +1,4 @@
+# Copyright © Endless Foundation
 # Copyright © Aptos Foundation
 # SPDX-License-Identifier: Apache-2.0
 
@@ -7,12 +8,12 @@ import typing
 import unittest
 import unittest.mock
 
-from aptos_sdk.account import Account
-from aptos_sdk.account_address import AccountAddress
-from aptos_sdk.account_sequence_number import AccountSequenceNumber
-from aptos_sdk.async_client import RestClient
-from aptos_sdk.bcs import Serializer
-from aptos_sdk.transactions import (
+from endless_sdk.account import Account
+from endless_sdk.account_address import AccountAddress
+from endless_sdk.account_sequence_number import AccountSequenceNumber
+from endless_sdk.async_client import RestClient
+from endless_sdk.bcs import Serializer
+from endless_sdk.transactions import (
     EntryFunction,
     SignedTransaction,
     TransactionArgument,
@@ -186,23 +187,23 @@ class Test(unittest.IsolatedAsyncioTestCase):
             TransactionArgument(100, Serializer.u64),
         ]
         payload = EntryFunction.natural(
-            "0x1::aptos_accounts",
+            "0x1::endless_accounts",
             "transfer",
             [],
             transaction_arguments,
         )
 
         seq_num_patcher = unittest.mock.patch(
-            "aptos_sdk.async_client.RestClient.account_sequence_number", return_value=0
+            "endless_sdk.async_client.RestClient.account_sequence_number", return_value=0
         )
         seq_num_patcher.start()
         submit_txn_patcher = unittest.mock.patch(
-            "aptos_sdk.async_client.RestClient.submit_bcs_transaction",
+            "endless_sdk.async_client.RestClient.submit_bcs_transaction",
             return_value="0xff",
         )
         submit_txn_patcher.start()
 
-        rest_client = RestClient("https://fullnode.devnet.aptoslabs.com/v1")
+        rest_client = RestClient("https://rpc-test.endless.link/v1")
         txn_queue = TransactionQueue(rest_client)
         txn_worker = TransactionWorker(Account.generate(), rest_client, txn_queue.next)
         txn_worker.start()
@@ -216,7 +217,7 @@ class Test(unittest.IsolatedAsyncioTestCase):
         submit_txn_patcher.stop()
         exception = Exception("Power overwhelming")
         submit_txn_patcher = unittest.mock.patch(
-            "aptos_sdk.async_client.RestClient.submit_bcs_transaction",
+            "endless_sdk.async_client.RestClient.submit_bcs_transaction",
             side_effect=exception,
         )
         submit_txn_patcher.start()

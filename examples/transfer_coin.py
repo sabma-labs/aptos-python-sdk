@@ -1,10 +1,11 @@
+# Copyright © Endless Foundation
 # Copyright © Aptos Foundation
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
-
-from aptos_sdk.account import Account
-from aptos_sdk.async_client import FaucetClient, IndexerClient, RestClient
+import json 
+from endless_sdk.account import Account
+from endless_sdk.async_client import FaucetClient, IndexerClient, RestClient
 
 from .common import FAUCET_AUTH_TOKEN, FAUCET_URL, INDEXER_URL, NODE_URL
 import pdb
@@ -59,8 +60,9 @@ async def main():
 
     # Have Alice give Bob another 1_000 coins using BCS
     txn_hash = await rest_client.bcs_transfer(alice, bob.address(), 1_000)
+    
     await rest_client.wait_for_transaction(txn_hash)
-
+    
     print("\n=== Final Balances ===")
     alice_balance = rest_client.account_balance(alice.address())
     bob_balance = rest_client.account_balance(bob.address())
@@ -90,7 +92,6 @@ async def main():
 
         variables = {"account": f"{bob.address()}"}
         data = await indexer_client.query(query, variables)
-        pdb.set_trace()
         assert len(data["data"]["account_transactions"]) > 0
 
     await rest_client.close()

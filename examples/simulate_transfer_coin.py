@@ -1,18 +1,19 @@
+# Copyright © Endless Foundation
 # Copyright © Aptos Foundation
 # SPDX-License-Identifier: Apache-2.0
 
 import asyncio
 import json
 
-from aptos_sdk.account import Account
-from aptos_sdk.async_client import FaucetClient, RestClient
-from aptos_sdk.bcs import Serializer
-from aptos_sdk.transactions import (
+from endless_sdk.account import Account
+from endless_sdk.async_client import FaucetClient, RestClient
+from endless_sdk.bcs import Serializer
+from endless_sdk.transactions import (
     EntryFunction,
     TransactionArgument,
     TransactionPayload,
 )
-from aptos_sdk.type_tag import StructTag, TypeTag
+from endless_sdk.type_tag import StructTag, TypeTag
 
 from .common import FAUCET_AUTH_TOKEN, FAUCET_URL, NODE_URL
 

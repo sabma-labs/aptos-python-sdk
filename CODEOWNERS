@@ -2,8 +2,8 @@
 
 # Owners for the `.github` directory and all its subdirectories.
 
-/.github/ @aptos-labs/developer-platform @aptos-labs/security
+/.github/ @endless-labs/developer-platform @endless-labs/security
 
 # Auto-reviewers for all code
 
-* @aptos-labs/developer-platform @davidiw @gregnazario
+* @endless-labs/developer-platform @davidiw @gregnazario
